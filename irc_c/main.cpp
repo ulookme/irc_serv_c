@@ -6,7 +6,7 @@
 /*   By: chajjar <chajjar@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/18 19:02:39 by chajjar           #+#    #+#             */
-/*   Updated: 2023/03/19 05:08:17 by chajjar          ###   ########.fr       */
+/*   Updated: 2023/03/19 23:33:46 by chajjar          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,10 @@ int main(int argc, char **argv) {
     int port = std::stoi(argv[2]);
     std::string password = argv[3];
 
+    std::cout << "Server address: " << server_address << std::endl;
+    std::cout << "Port: " << port << std::endl;
+    std::cout << "Password: " << password << std::endl;
+    
     try {
         IRCServer server(server_address, port, password);
         server.run();

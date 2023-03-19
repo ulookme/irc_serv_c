@@ -6,7 +6,7 @@
 /*   By: chajjar <chajjar@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/18 13:43:49 by chajjar           #+#    #+#             */
-/*   Updated: 2023/03/19 19:53:35 by chajjar          ###   ########.fr       */
+/*   Updated: 2023/03/19 23:26:38 by chajjar          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -289,7 +289,7 @@ void IRCServer::processClientCommand(Client* client, const std::string& command_
             cmd_stream >> channel_name;
 
             // Obtenir ou créer le canal
-            Channel* channel = getOrCreateChannel(channel_name);
+            Channel* channel = getOrCreateChannel(client, channel_name);
 
             // Faire rejoindre le client au canal
             channel->addClient(client);
@@ -321,9 +321,49 @@ void IRCServer::processClientCommand(Client* client, const std::string& command_
                 std::string response = "La cible n'existe pas.\n";
                 send(client->getSocket(), response.c_str(), response.size(), 0);
             }
+        } else if (command == "NOTICE") {
+            std::string target, message;
+            cmd_stream >> target;
+            std::getline(cmd_stream, message);
+            if (!message.empty() && message[0] == ' ') {
+                message.erase(0, 1); // Supprime l'espace au début du message
+            }
+        
+            if (target.empty() || message.empty()) {
+                // Erreur : cible ou message vide
+            } else if (target[0] == '#') {
+                sendNoticeToChannel(new Client(*client), target, message);
+            } else {
+                Client* target_client = getClientByNickname(target);
+                if (target_client) {
+                    sendNotice(target_client, message);
+                } else {
+                    // Envoyer un message indiquant que la cible n'existe pas
+                    std::string response = "La cible n'existe pas.\n";
+                    send(client->getSocket(), response.c_str(), response.size(), 0);
+                }
+         }
+        } else if (command == "OP") {
+            std::string channel_name, nickname;
+            cmd_stream >> channel_name >> nickname;
+            Channel* channel = getChannel(channel_name);
+            if (channel) {
+                if (channel->isOperator(client)) {
+                    Client* target_client = getClientByNickname(nickname);
+                    if (target_client) {
+                        channel->addOperator(target_client);
+                        sendNotice(client, "Vous avez promu " + nickname + " en tant qu'opérateur sur " + channel_name + ".");
+                    } else {
+                        sendNotice(client, "L'utilisateur " + nickname + " n'est pas en ligne.");
+                    }
+                } else {
+                    sendNotice(client, "Vous n'êtes pas autorisé à promouvoir des utilisateurs en opérateurs.");
+                }
+            } else {
+                    sendNotice(client, "Le canal " + channel_name + " n'existe pas.");
+            }
         }
-        // Ajoutez d'autres commandes ici en utilisant la structure if-else
-    } else {
+    }else {
         // Envoyer un message indiquant que le client doit s'authentifier
         std::string response = "Veuillez vous authentifier avec la commande PASS.\n";
         send(client->getSocket(), response.c_str(), response.size(), 0);
@@ -405,7 +445,7 @@ Client* IRCServer::getClient(const std::string& nickname) const {
     return nullptr;
 }
 
-Channel* IRCServer::getOrCreateChannel(const std::string& channel_name) {
+/**Channel* IRCServer::getOrCreateChannel(const std::string& channel_name) {
     // Rechercher le canal par son nom
     std::map<std::string, Channel*>::iterator it = channels_.find(channel_name);
 
@@ -418,4 +458,53 @@ Channel* IRCServer::getOrCreateChannel(const std::string& channel_name) {
         // Si le canal existe déjà, retourner un pointeur vers celui-ci
         return it->second;
     }
+}*/
+
+Channel* IRCServer::getOrCreateChannel(Client* client, const std::string& channel_name) {
+    std::map<std::string, Channel*>::iterator it = channels_.find(channel_name);
+    if (it == channels_.end()) {
+        Channel* new_channel = new Channel(channel_name, this);
+        new_channel->addClient(client);
+        new_channel->setOperator(client); // Définit le premier client qui rejoint le canal comme opérateur
+        channels_.insert(std::make_pair(channel_name, new_channel));
+        return new_channel;
+    } else {
+        Channel* channel = it->second;
+        channel->addClient(client);
+        return channel;
+    }
+}
+
+void IRCServer::sendNoticeToChannel(Client* from, const std::string& channel_name, const std::string& message) {
+    Channel* channel = getChannel(channel_name);
+    if (channel) {
+        std::string notice_message = "Notice de " + from->getNickname() + " sur #" + channel_name + ": " + message;
+        channel->broadcastMessage(from->getNickname(), notice_message);
+    } else {
+        std::string response = "Canal introuvable: " + channel_name + "\n";
+        send(from->getSocket(), response.c_str(), response.size(), 0);
+    }
+}
+
+Client* IRCServer::getClientByNickname(const std::string& nickname) {
+    std::vector<Client*>::iterator it;
+    for (it = clients_.begin(); it != clients_.end(); ++it) {
+        if ((*it)->getNickname() == nickname) {
+            return *it;
+        }
+    }
+    return NULL;
+}
+
+void IRCServer::sendNotice(Client* client, const std::string& message) {
+    std::string notice_message = "-Server Notice- " + message + "\n";
+    client->sendMessage(notice_message);
+}
+
+Channel* IRCServer::getChannel(const std::string& channel_name) {
+    std::map<std::string, Channel*>::iterator it = channels_.find(channel_name);
+    if (it != channels_.end()) {
+        return it->second;
+    }
+    return NULL;
 }

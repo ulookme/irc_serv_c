@@ -6,7 +6,7 @@
 /*   By: chajjar <chajjar@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/18 13:48:29 by chajjar           #+#    #+#             */
-/*   Updated: 2023/03/19 19:13:26 by chajjar          ###   ########.fr       */
+/*   Updated: 2023/03/19 22:22:21 by chajjar          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,6 +50,8 @@ public:
     bool isDisconnected() const;
     void setDisconnected();
     std::string receiveMessage();
+    bool isOperator() const;
+    void setOperator(bool value);
     
 private:
 
@@ -59,6 +61,7 @@ private:
     bool markedForDisconnection_;
     bool authenticated_; // Add a flag to check if the client is authenticated
     std::string password_;
+    bool is_operator_;
 };
 
 #endif // CLIENT_HPP

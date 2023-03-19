@@ -6,7 +6,7 @@
 /*   By: chajjar <chajjar@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/18 13:50:06 by chajjar           #+#    #+#             */
-/*   Updated: 2023/03/19 19:13:40 by chajjar          ###   ########.fr       */
+/*   Updated: 2023/03/19 23:32:49 by chajjar          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,7 +59,16 @@ bool Client::isAuthenticated() const {
     return authenticated_;
 }
 
+//void Client::authenticate(const std::string& password) {
+//    if (password == password_) {
+//        authenticated_ = true;
+//    }
+//}
+
 void Client::authenticate(const std::string& password) {
+    std::cout << "Password received: " << password << std::endl;
+    std::cout << "Expected password: " << password_ << std::endl;
+
     if (password == password_) {
         authenticated_ = true;
     }
@@ -100,4 +109,12 @@ bool Client::isDisconnected() const {
 
 void Client::setDisconnected() {
     markedForDisconnection_ = true;
+}
+
+bool Client::isOperator() const {
+    return is_operator_;
+}
+
+void Client::setOperator(bool value) {
+    is_operator_ = value;
 }
