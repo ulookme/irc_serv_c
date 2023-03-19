@@ -6,7 +6,7 @@
 /*   By: chajjar <chajjar@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/18 13:48:29 by chajjar           #+#    #+#             */
-/*   Updated: 2023/03/18 20:39:25 by chajjar          ###   ########.fr       */
+/*   Updated: 2023/03/19 19:13:26 by chajjar          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,9 @@ public:
     bool isMarkedForDisconnection() const;
     void markForDisconnection();
     void sendMessage(const std::string& message);
+    bool isDisconnected() const;
+    void setDisconnected();
+    std::string receiveMessage();
     
 private:
 

@@ -6,7 +6,7 @@
 #    By: chajjar <chajjar@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/03/18 19:12:11 by chajjar           #+#    #+#              #
-#    Updated: 2023/03/18 19:39:45 by chajjar          ###   ########.fr        #
+#    Updated: 2023/03/19 19:41:37 by chajjar          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -15,7 +15,7 @@ NAME = irc_server
 SRC = main.cpp IRCServer.cpp Client.cpp Channel.cpp
 OBJ = $(SRC:.cpp=.o)
 CC = c++
-FLAGS = -Wall -Wextra -Werror -std=c++98
+FLAGS =  -g -Wall -Wextra -Werror -std=c++98
 
 all: $(NAME)
 

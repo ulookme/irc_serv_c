@@ -6,7 +6,7 @@
 /*   By: chajjar <chajjar@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/18 13:53:35 by chajjar           #+#    #+#             */
-/*   Updated: 2023/03/18 23:42:29 by chajjar          ###   ########.fr       */
+/*   Updated: 2023/03/19 19:33:17 by chajjar          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,12 +27,7 @@ bool Channel::hasClient(Client* client) const {
 
 void Channel::sendMessage(Client* from, const std::string& message) {
     std::string response = "Message de " + from->getNickname() + " sur #" + name_ + ": " + message + "\n";
-    for (std::map<std::string, Client*>::iterator it = clients_.begin(); it != clients_.end(); ++it) {
-        Client* client = it->second;
-        if (client != from) {
-            server_->sendToClient(client, response);
-        }
-    }
+    broadcastMessage(from->getNickname(), response);
 }
 
 void Channel::addClient(Client* client) {

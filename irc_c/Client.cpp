@@ -6,7 +6,7 @@
 /*   By: chajjar <chajjar@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/18 13:50:06 by chajjar           #+#    #+#             */
-/*   Updated: 2023/03/18 20:43:32 by chajjar          ###   ########.fr       */
+/*   Updated: 2023/03/19 19:13:40 by chajjar          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,4 +72,32 @@ void Client::sendMessage(const std::string& message) {
         // Error handling
         std::cout << "Failed to send message to client with socket " << socket_ << std::endl;
     }
+}
+
+// Ajouter cette méthode dans le fichier Client.cpp
+std::string Client::receiveMessage() {
+    char buffer[1024];
+    int num_bytes_received = recv(socket_, buffer, sizeof(buffer), 0);
+
+    if (num_bytes_received == -1) {
+        // Error handling
+        std::cout << "Failed to receive message from client with socket " << socket_ << std::endl;
+        markForDisconnection();
+        return "";
+    } else if (num_bytes_received == 0) {
+        // Client closed the connection
+        markForDisconnection();
+        return "";
+    } else {
+        return std::string(buffer, num_bytes_received);
+    }
+}
+
+// Remplacez les définitions de méthode dans Client.cpp par celles-ci
+bool Client::isDisconnected() const {
+    return markedForDisconnection_;
+}
+
+void Client::setDisconnected() {
+    markedForDisconnection_ = true;
 }

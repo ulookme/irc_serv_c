@@ -6,7 +6,7 @@
 /*   By: chajjar <chajjar@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/18 13:43:49 by chajjar           #+#    #+#             */
-/*   Updated: 2023/03/19 05:02:14 by chajjar          ###   ########.fr       */
+/*   Updated: 2023/03/19 19:53:35 by chajjar          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,12 +54,6 @@ bool IRCServer::init() {
     return true;
 }
 
-//IRCServer::IRCServer(int port, const std::string& password)
-//    : port_(port), password_(password) {
-//    serverSocket_ = createServerSocket(port);
-//    setNonBlocking(serverSocket_);
-//}
-
 IRCServer::~IRCServer() {
     close(serverSocket_);
 
@@ -74,7 +68,7 @@ void IRCServer::run() {
     fd_set read_fds;
     int max_fd;
 
-    // Ajouter un message pour indiquer que le serveur est prêt et à l'écoute
+    // Add a message to indicate that the server is ready and listening
     std::cout << "Server is running and listening on port " << port_ << std::endl;
 
     while (true) {
@@ -112,15 +106,31 @@ void IRCServer::run() {
         }
 
         // Gérer la déconnexion des clients ici, par exemple en utilisant une liste de clients à supprimer.
-        for (std::vector<Client*>::iterator it = clients_.begin(); it != clients_.end();) {
-            Client* client = *it;
-            if (client->isMarkedForDisconnection()) {
-                disconnectClient(client);
+        std::vector<Client*>::iterator it = clients_.begin();
+        while (it != clients_.end()) {
+            if ((*it)->isDisconnected()) {
+                std::cout << "Client " << (*it)->getNickname() << " disconnected." << std::endl;
+                delete *it;
                 it = clients_.erase(it);
             } else {
                 ++it;
             }
         }
+    }
+}
+
+
+void IRCServer::setNonBlocking(int sockfd) {
+    int flags = fcntl(sockfd, F_GETFL, 0);
+    if (flags == -1) {
+        perror("fcntl");
+        exit(EXIT_FAILURE);
+    }
+
+    flags |= O_NONBLOCK;
+    if (fcntl(sockfd, F_SETFL, flags) == -1) {
+        perror("fcntl");
+        exit(EXIT_FAILURE);
     }
 }
 
@@ -152,18 +162,6 @@ int IRCServer::createServerSocket(int port) {
     return server_socket;
 }
 
-void IRCServer::setNonBlocking(int sockfd) {
-    int flags = fcntl(sockfd, F_GETFL, 0);
-    if (flags < 0) {
-        perror("fcntl");
-        exit(1);
-    }
-    flags |= O_NONBLOCK;
-    if (fcntl(sockfd, F_SETFL, flags) < 0) {
-        perror("fcntl");
-        exit(1);
-    }
-}
 
 void IRCServer::acceptNewClient() {
     struct sockaddr_in client_addr;
@@ -289,10 +287,16 @@ void IRCServer::processClientCommand(Client* client, const std::string& command_
         } else if (command == "JOIN") {
             std::string channel_name;
             cmd_stream >> channel_name;
-            joinChannel(new Client(*client), channel_name);
+
+            // Obtenir ou créer le canal
+            Channel* channel = getOrCreateChannel(channel_name);
+
+            // Faire rejoindre le client au canal
+            channel->addClient(client);
+
             // Envoyer un message indiquant que le client a rejoint le canal
             std::string response = "Vous avez rejoint le canal: " + channel_name + "\n";
-            send(client->getSocket(), response.c_str(), response.size(), 0);
+            client->sendMessage(response);
         } else if (command == "PRIVMSG") {
             std::string target, message;
             cmd_stream >> target;
@@ -399,4 +403,19 @@ Client* IRCServer::getClient(const std::string& nickname) const {
         }
     }
     return nullptr;
+}
+
+Channel* IRCServer::getOrCreateChannel(const std::string& channel_name) {
+    // Rechercher le canal par son nom
+    std::map<std::string, Channel*>::iterator it = channels_.find(channel_name);
+
+    // Si le canal n'existe pas, le créer et l'ajouter à la liste des canaux
+    if (it == channels_.end()) {
+        Channel* new_channel = new Channel(channel_name, this);
+        channels_.insert(std::make_pair(channel_name, new_channel));
+        return new_channel;
+    } else {
+        // Si le canal existe déjà, retourner un pointeur vers celui-ci
+        return it->second;
+    }
 }
