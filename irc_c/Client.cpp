@@ -6,7 +6,7 @@
 /*   By: chajjar <chajjar@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/18 13:50:06 by chajjar           #+#    #+#             */
-/*   Updated: 2023/03/19 23:32:49 by chajjar          ###   ########.fr       */
+/*   Updated: 2023/03/19 23:58:35 by chajjar          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,7 +69,7 @@ void Client::authenticate(const std::string& password) {
     std::cout << "Password received: " << password << std::endl;
     std::cout << "Expected password: " << password_ << std::endl;
 
-    if (password == password_) {
+    if (password_ == password) {
         authenticated_ = true;
     }
 }

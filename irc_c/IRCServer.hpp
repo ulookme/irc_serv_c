@@ -6,7 +6,7 @@
 /*   By: chajjar <chajjar@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/18 13:43:14 by chajjar           #+#    #+#             */
-/*   Updated: 2023/03/19 23:25:23 by chajjar          ###   ########.fr       */
+/*   Updated: 2023/03/19 23:48:36 by chajjar          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,8 @@ public:
     void sendNotice(Client* client, const std::string& message);
     Channel* getChannel(const std::string& channel_name);
     Channel* getOrCreateChannel(Client* client, const std::string& channel_name);
-    
+    bool init(const std::string& address, const std::string& password);
+
 private:
     int createServerSocket(int port);
     void setNonBlocking(int sockfd);
@@ -62,7 +63,8 @@ private:
     void sendChannelMessage(Client* from, const std::string& channel_name, const std::string& message);
     void removeClient(Client* client);
     //void sendToClient(Client* client, const std::string& message);
-    bool init();
+    //bool init();
+    //bool init(const std::string& address, const std::string& password);
     int serverSocket_;
     int port_;
     std::string password_;

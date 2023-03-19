@@ -6,7 +6,7 @@
 /*   By: chajjar <chajjar@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/18 13:43:49 by chajjar           #+#    #+#             */
-/*   Updated: 2023/03/19 23:26:38 by chajjar          ###   ########.fr       */
+/*   Updated: 2023/03/19 23:55:50 by chajjar          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,16 +20,63 @@
 #include <iostream>
 
 
-IRCServer::IRCServer(const std::string& address, int port, const std::string& password)
-    : port_(port), password_(password) {
+//IRCServer::IRCServer(const std::string& address, int port, const std::string& password)
+//    : port_(port), password_(password) {
+//    serverSocket_ = createServerSocket(port_);
+//    setNonBlocking(serverSocket_);
+//}
+
+/**IRCServer::IRCServer(const std::string& address, int port, const std::string& password)
+    : port_(port) {
+    init(password);
     serverSocket_ = createServerSocket(port_);
+    setNonBlocking(serverSocket_);
+}**/
+// Dans l'implémentation de la classe IRCServer (dans IRCServer.cpp)
+// Dans l'implémentation de la classe IRCServer (dans IRCServer.cpp)
+bool IRCServer::init(const std::string& address, const std::string& password) {
+    int opt = 1;
+
+    serverSocket_ = socket(AF_INET, SOCK_STREAM, 0);
+    if (serverSocket_ == -1) {
+        perror("socket creation failed");
+        return false;
+    }
+
+    if (setsockopt(serverSocket_, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) < 0) {
+        perror("setsockopt failed");
+        return false;
+    }
+
+    memset(&serverAddress_, 0, sizeof(serverAddress_));
+    serverAddress_.sin_family = AF_INET;
+    serverAddress_.sin_addr.s_addr = inet_addr(address.c_str()); // Utilisez l'adresse fournie
+    serverAddress_.sin_port = htons(port_);
+
+    if (bind(serverSocket_, (struct sockaddr *)&serverAddress_, sizeof(serverAddress_)) < 0) {
+        perror("bind failed");
+        return false;
+    }
+
+    if (listen(serverSocket_, 10) < 0) {
+        perror("listen failed");
+        return false;
+    }
+
+    password_ = password; // Mettez à jour le mot de passe du serveur
+
+    return true;
+}
+
+IRCServer::IRCServer(const std::string& address, int port, const std::string& password)
+    : port_(port) {
+    init(address, password); // Utilisez l'adresse du serveur et le mot de passe lors de l'initialisation
     setNonBlocking(serverSocket_);
 }
 
-
-bool IRCServer::init() {
+/**bool IRCServer::init(const std::string& address, const std::string& password) {
     int opt = 1;
-
+    password_ = password;
     serverSocket_ = socket(AF_INET, SOCK_STREAM, 0);
     if (serverSocket_ == -1) {
         perror("socket creation failed");
@@ -52,7 +99,7 @@ bool IRCServer::init() {
     }
 
     return true;
-}
+}**/
 
 IRCServer::~IRCServer() {
     close(serverSocket_);
