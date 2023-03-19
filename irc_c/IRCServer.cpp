@@ -6,7 +6,7 @@
 /*   By: chajjar <chajjar@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/18 13:43:49 by chajjar           #+#    #+#             */
-/*   Updated: 2023/03/18 23:43:54 by chajjar          ###   ########.fr       */
+/*   Updated: 2023/03/19 05:02:14 by chajjar          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,11 +19,46 @@
 #include <sys/socket.h>
 #include <iostream>
 
-IRCServer::IRCServer(int port, const std::string& password)
+
+IRCServer::IRCServer(const std::string& address, int port, const std::string& password)
     : port_(port), password_(password) {
-    serverSocket_ = createServerSocket(port);
+    serverSocket_ = createServerSocket(port_);
     setNonBlocking(serverSocket_);
 }
+
+
+bool IRCServer::init() {
+    int opt = 1;
+
+    serverSocket_ = socket(AF_INET, SOCK_STREAM, 0);
+    if (serverSocket_ == -1) {
+        perror("socket creation failed");
+        return false;
+    }
+
+    if (setsockopt(serverSocket_, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) < 0) {
+        perror("setsockopt failed");
+        return false;
+    }
+
+    if (bind(serverSocket_, (struct sockaddr *)&serverAddress_, sizeof(serverAddress_)) < 0) {
+        perror("bind failed");
+        return false;
+    }
+
+    if (listen(serverSocket_, 10) < 0) {
+        perror("listen failed");
+        return false;
+    }
+
+    return true;
+}
+
+//IRCServer::IRCServer(int port, const std::string& password)
+//    : port_(port), password_(password) {
+//    serverSocket_ = createServerSocket(port);
+//    setNonBlocking(serverSocket_);
+//}
 
 IRCServer::~IRCServer() {
     close(serverSocket_);
@@ -38,6 +73,9 @@ IRCServer::~IRCServer() {
 void IRCServer::run() {
     fd_set read_fds;
     int max_fd;
+
+    // Ajouter un message pour indiquer que le serveur est prêt et à l'écoute
+    std::cout << "Server is running and listening on port " << port_ << std::endl;
 
     while (true) {
         FD_ZERO(&read_fds);
@@ -88,33 +126,30 @@ void IRCServer::run() {
 
 
 int IRCServer::createServerSocket(int port) {
-    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0) {
+    int server_socket = socket(AF_INET, SOCK_STREAM, 0);
+    if (server_socket < 0) {
         perror("socket");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
-
-    int enable = 1;
-    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0) {
+    int opt = 1;
+    if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&opt, sizeof(opt)) < 0) {
         perror("setsockopt");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
-
+    memset(&serverAddress_, 0, sizeof(serverAddress_));
     serverAddress_.sin_family = AF_INET;
     serverAddress_.sin_addr.s_addr = INADDR_ANY;
     serverAddress_.sin_port = htons(port);
 
-    if (bind(sockfd, (struct sockaddr*)&serverAddress_, sizeof(serverAddress_)) < 0) {
+    if (bind(server_socket, (struct sockaddr*)&serverAddress_, sizeof(serverAddress_)) < 0) {
         perror("bind");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
-
-    if (listen(sockfd, 5) < 0) {
+    if (listen(server_socket, 5) < 0) {
         perror("listen");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
-
-    return sockfd;
+    return server_socket;
 }
 
 void IRCServer::setNonBlocking(int sockfd) {

@@ -6,7 +6,7 @@
 /*   By: chajjar <chajjar@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/18 13:43:14 by chajjar           #+#    #+#             */
-/*   Updated: 2023/03/18 23:41:36 by chajjar          ###   ########.fr       */
+/*   Updated: 2023/03/19 04:35:10 by chajjar          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,8 @@ class Channel; // Déclaration anticipée de la classe Channel
 
 class IRCServer {
 public:
-    IRCServer(int port, const std::string& password);
+    //IRCServer(int port, const std::string& password);
+    IRCServer(const std::string& address, int port, const std::string& password);
     ~IRCServer();
     void sendToClient(Client* client, const std::string& message);
 
@@ -60,7 +61,7 @@ private:
     void sendChannelMessage(Client* from, const std::string& channel_name, const std::string& message);
     void removeClient(const std::shared_ptr<Client>& client);
     //void sendToClient(Client* client, const std::string& message);
-
+    bool init();
     int serverSocket_;
     int port_;
     std::string password_;
